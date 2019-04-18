@@ -19,18 +19,29 @@ class Parser(ABC):
         self.tracked_files = []
         self.updated_files = []
         self.directory = dir
+        self.extensions = None
     @abstractmethod
-    def parse(self, file):
+    def parse(self, file, obj_container):
         pass
-    @abstractmethod
-    def update_dir(self):
-        pass    
+    def update_dir(self, obj_container):
+        for file in glob.iglob(self.directory + '/**', recursive=True):
+            if file.endswith(self.extensions):
+                if file not in self.tracked_files:
+                    if file not in self.updated_files:
+                        print("Caught this: " + file + "\n")
+                        self.parse(file, obj_container)
+                        self.updated_files.append(file)
+                        #if os.stat(file).st_mtime > os.stat(self.tracked_files[self.tracked_files.index(file)]).st_mtime:
     def process_updated(self):
         pass
     def process_tracked(self):
         pass
 
 class ParseC(Parser):
+
+    def __init__(self, dir):
+        Parser.__init__(self, dir)
+        self.extensions = ('h', 'hpp')
 
     def parse(self, file_path, obj_container):
         with open(file_path) as file:
@@ -48,19 +59,10 @@ class ParseC(Parser):
                             name = splitstr[splitstr.index("class") + 1]
                             if (checkObjectName(obj_container, name)):                                   
                                 struct = Structure(StructureType.CLASS, name, prepare_pos(obj_container))
+                                struct.shape.setFill("white")
                                 obj_container.append(struct)
                 if "*/" in str:
                     is_comment = False
-
-    def update_dir(self, obj_container):
-        for file in glob.iglob(self.directory + '/**', recursive=True):
-            if file.endswith('.h') or file.endswith('.hpp'):
-                if file not in self.tracked_files:
-                    if file not in self.updated_files:
-                        print("Caught this: " + file + "\n")
-                        self.parse(file, obj_container)
-                        self.updated_files.append(file)
-                        #if os.stat(file).st_mtime > os.stat(self.tracked_files[self.tracked_files.index(file)]).st_mtime:
 
 class Structure:
     def __init__(self, type, name = "Name_error", pos=Point(0,0)):
@@ -74,6 +76,7 @@ class Structure:
 class App:
     def __init__(self):
         self._win = GraphWin("DIVINEPLAN", 800, 600)
+        self._win.setBackground("cyan")
         self.obj = []
         self.isOn = True
         if len(sys.argv) > 1:
@@ -86,22 +89,18 @@ class App:
             obj.name.draw(self._win)
 
     def loop(self):
-        """ 
-            Make element drawing work
-        """        
-
         self.parser.update_dir(self.obj)
         self.draw()
-        
         while self.isOn:
             mouse_point = self._win.getMouse()
             for obj in self.obj:
                 if checkCollisions(mouse_point, obj.shape):
+                    obj.shape.setFill("yellow")
                     move_point = self._win.getMouse()
                     obj.shape.move(move_point.getX() - obj.shape.getCenter().getX(), move_point.getY() - obj.shape.getCenter().getY())
                     obj.name.move(move_point.getX() - obj.name.getAnchor().getX(), move_point.getY() - obj.name.getAnchor().getY())
+                    obj.shape.setFill("white")
         self._win.close()
-
 def checkCollisions(point, circle):
     dx = abs(point.getX() - circle.getCenter().getX())
     dy = abs(point.getY() - circle.getCenter().getY())
