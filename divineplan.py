@@ -9,7 +9,6 @@ from pathlib import Path
 
 CIRCLE_BASIC_RADIUS = 40
 
-
 class StructureType(Enum):
     CLASS = 0
     METHOD = 1
@@ -43,16 +42,13 @@ class ParseC(Parser):
                     splitstr = str.split()
                     if ((str.index("class ") == 0 
                     or str[str.index("class ") - 1] in ["", " "])):
-                    #and splitstr[splitstr.index("class") - 1] != "friend"
-                    #and not splitstr[-1].endswith(';')):
                         if not is_comment and not (str[1:2] == "//"):
                             print(str[-1])
                             print(splitstr)
                             name = splitstr[splitstr.index("class") + 1]
-                            for obj in obj_container:
-                                if name == obj.getText()
-                            struct = Structure(StructureType.CLASS, name, prepare_pos(obj_container))
-                            obj_container.append(struct)
+                            if (checkObjectName(obj_container, name)):                                   
+                                struct = Structure(StructureType.CLASS, name, prepare_pos(obj_container))
+                                obj_container.append(struct)
                 if "*/" in str:
                     is_comment = False
 
@@ -96,62 +92,34 @@ class App:
 
         self.parser.update_dir(self.obj)
         self.draw()
-        self._win.getMouse()
-        #while self.isOn:
-        #    pass
+        
+        while self.isOn:
+            mouse_point = self._win.getMouse()
+            for obj in self.obj:
+                if checkCollisions(mouse_point, obj.shape):
+                    move_point = self._win.getMouse()
+                    obj.shape.move(move_point.getX() - obj.shape.getCenter().getX(), move_point.getY() - obj.shape.getCenter().getY())
+                    obj.name.move(move_point.getX() - obj.name.getAnchor().getX(), move_point.getY() - obj.name.getAnchor().getY())
         self._win.close()
 
+def checkCollisions(point, circle):
+    dx = abs(point.getX() - circle.getCenter().getX())
+    dy = abs(point.getY() - circle.getCenter().getY())
+    if dx > circle.getRadius() or dy > circle.getRadius():
+        return False
+    if dx + dy <= circle.getRadius():
+        return True
+    if dx**2 + dy**2 <= circle.getRadius() ** 2:
+        return True
+    return False
 
-def relocate_shape(current_pos, obj_container):
-    for obj in obj_container:
-        obj_x = int(obj.shape.getCenter().getX())
-        obj_y = int(obj.shape.getCenter().getY())
-        if current_pos.getX() in range(obj_x - CIRCLE_BASIC_RADIUS, obj_x) and current_pos.getY() in range(obj_y - CIRCLE_BASIC_RADIUS, obj_y):
-            current_pos.move(-CIRCLE_BASIC_RADIUS, -CIRCLE_BASIC_RADIUS)
-            relocate_shape(current_pos, obj_container)
-        elif current_pos.getX() in range(obj_x, obj_x + CIRCLE_BASIC_RADIUS) and current_pos.getY() in range(obj_y - CIRCLE_BASIC_RADIUS, obj_y):
-            current_pos.move(CIRCLE_BASIC_RADIUS, -CIRCLE_BASIC_RADIUS)
-            relocate_shape(current_pos, obj_container)
-        elif current_pos.getX() in range(obj_x - CIRCLE_BASIC_RADIUS, obj_x) and current_pos.getY() in range(obj_y, obj_y + CIRCLE_BASIC_RADIUS):
-            current_pos.move(-CIRCLE_BASIC_RADIUS, CIRCLE_BASIC_RADIUS)
-            relocate_shape(current_pos, obj_container)
-        elif current_pos.getX() in range(obj_x, obj_x + CIRCLE_BASIC_RADIUS) and current_pos.getY() in range(obj_y, obj_y + CIRCLE_BASIC_RADIUS):
-            current_pos.move(CIRCLE_BASIC_RADIUS, CIRCLE_BASIC_RADIUS)
-            relocate_shape(current_pos, obj_container)
-    return current_pos
+def checkObjectName(obj_containter, name):
+    for obj in obj_containter:
+        if name == obj.getName():
+            return False
+    return True
 
 def prepare_pos(obj_container):
     x = random.choice(range(0, 800))
     y = random.choice(range(0, 600))
     return Point(x,y)
-    #return relocate_shape(Point(x,y), obj_container)
-    # x = random.choice(range(200, 400))
-    # y = random.choice(range(200, 400))
-    # #x = 400
-    # #y = 300
-    # for obj in obj_container:
-    #     obj_x = int(obj.shape.getCenter().getX())
-    #     obj_y = int(obj.shape.getCenter().getY())
-    #     if x in range(obj_x - 40, obj_x + 40): #(obj_x - 20, 0)
-    #         x_move_distance = random.choice(range(-80, 80))
-    #         obj.shape.move(x_move_distance, 0)
-    #         obj.name.move(x_move_distance, 0)
-    #     if y in range(obj_y - 40, obj_y + 40):
-    #         y_move_distance = random.choice(range(-80, 80))
-    #         obj.shape.move(0, y_move_distance)
-    #         obj.name.move(0, y_move_distance)
-
-
-    # for i in range(100,700, 80):
-    #     for j in range(100, 500, 80):
-    #         collided = False
-    #         for obj in obj_container:
-    #             obj_x = int(obj.shape.getCenter().getX())
-    #             obj_y = int(obj.shape.getCenter().getY())
-    #             if i in range(obj_x - 40, obj_x + 40) and j in range(obj_y - 40, obj_y + 40):
-    #                 collided = True
-    #         if not collided:
-    #             return Point(i,j)
-    # return Point(400,300)
-
-
