@@ -23,19 +23,20 @@ class Parser(ABC):
     @abstractmethod
     def parse(self, file, obj_container):
         pass
-    def update_dir(self, obj_container):
+    def updateDir(self, obj_container):
         for file in glob.iglob(self.directory + '/**', recursive=True):
             if file.endswith(self.extensions):
-                if file not in self.tracked_files:
-                    if file not in self.updated_files:
-                        print("Caught this: " + file + "\n")
-                        self.parse(file, obj_container)
-                        self.updated_files.append(file)
-                        #if os.stat(file).st_mtime > os.stat(self.tracked_files[self.tracked_files.index(file)]).st_mtime:
-    def process_updated(self):
-        pass
-    def process_tracked(self):
-        pass
+                if (file not in self.tracked_files
+                or (os.stat(file).st_mtime != os.stat(self.tracked_files[self.tracked_files.index(file)]).st_mtime 
+                and file not in self.updated_files)):
+                    print("Caught this: " + file + "\n")
+                    self.updated_files.append(file)
+
+    def processUpdated(self, obj_container):
+        for file in self.updated_files:
+            self.parse(file, obj_container)
+            self.tracked_files.append(file)
+        self.updated_files.clear()
 
 class ParseC(Parser):
 
@@ -57,8 +58,8 @@ class ParseC(Parser):
                             print(str[-1])
                             print(splitstr)
                             name = splitstr[splitstr.index("class") + 1]
-                            if (checkObjectName(obj_container, name)):                                   
-                                struct = Structure(StructureType.CLASS, name, prepare_pos(obj_container))
+                            if (checkObjectName(obj_container, name)):
+                                struct = Structure(StructureType.CLASS, name, preparePos(obj_container))
                                 struct.shape.setFill("white")
                                 obj_container.append(struct)
                 if "*/" in str:
@@ -82,16 +83,19 @@ class App:
         if len(sys.argv) > 1:
             self.parser = ParseC(sys.argv[1])
         self.loop()
-    
+
     def draw(self):
         for obj in self.obj:
+            obj.shape.undraw()
+            obj.name.undraw()
             obj.shape.draw(self._win)
             obj.name.draw(self._win)
 
     def loop(self):
-        self.parser.update_dir(self.obj)
-        self.draw()
-        while self.isOn:
+        while self._win.isOpen:
+            self.parser.updateDir(self.obj)
+            self.parser.processUpdated(self.obj)
+            self.draw()
             mouse_point = self._win.getMouse()
             for obj in self.obj:
                 if checkCollisions(mouse_point, obj.shape):
@@ -118,7 +122,7 @@ def checkObjectName(obj_containter, name):
             return False
     return True
 
-def prepare_pos(obj_container):
-    x = random.choice(range(0, 800))
-    y = random.choice(range(0, 600))
+def preparePos(obj_container):
+    x = random.choice(range(100, 700))
+    y = random.choice(range(100, 500))
     return Point(x,y)
