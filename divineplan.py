@@ -39,11 +39,19 @@ class ParseC(Parser):
             for str in file:
                 if "/*" in str and not is_comment:
                     is_comment = True
-                if "class" in str:
-                    if str.index("class") == 0 or str[str.index("class") - 1] in ["", " "]:
-                        #TODO: creation of class elements
+                if "class " in str:
+                    splitstr = str.split()
+                    if ((str.index("class ") == 0 
+                    or str[str.index("class ") - 1] in ["", " "])):
+                    #and splitstr[splitstr.index("class") - 1] != "friend"
+                    #and not splitstr[-1].endswith(';')):
                         if not is_comment and not (str[1:2] == "//"):
-                            struct = Structure(StructureType.CLASS, str.split()[str.split().index("class") + 1], prepare_pos(obj_container))
+                            print(str[-1])
+                            print(splitstr)
+                            name = splitstr[splitstr.index("class") + 1]
+                            for obj in obj_container:
+                                if name == obj.getText()
+                            struct = Structure(StructureType.CLASS, name, prepare_pos(obj_container))
                             obj_container.append(struct)
                 if "*/" in str:
                     is_comment = False
@@ -65,7 +73,8 @@ class Structure:
             self.shape = Circle(pos, CIRCLE_BASIC_RADIUS) #TODO: compute_radius
         if type == StructureType.METHOD:
             self.shape = Rectangle(pos, Point(pos.getX() + 20, pos.getY() + 20))
-
+    def getName(self):
+        return self.name.getText()
 class App:
     def __init__(self):
         self._win = GraphWin("DIVINEPLAN", 800, 600)
@@ -112,9 +121,10 @@ def relocate_shape(current_pos, obj_container):
     return current_pos
 
 def prepare_pos(obj_container):
-    x = random.choice(range(100, 700))
-    y = random.choice(range(100, 500))
-    return relocate_shape(Point(x,y), obj_container)
+    x = random.choice(range(0, 800))
+    y = random.choice(range(0, 600))
+    return Point(x,y)
+    #return relocate_shape(Point(x,y), obj_container)
     # x = random.choice(range(200, 400))
     # y = random.choice(range(200, 400))
     # #x = 400
@@ -144,8 +154,4 @@ def prepare_pos(obj_container):
     #             return Point(i,j)
     # return Point(400,300)
 
-def main():
-    app = App()
 
-if __name__ == '__main__':
-    main()
