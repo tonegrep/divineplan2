@@ -1,7 +1,7 @@
-from divineplan import *
+import application 
 
 def main():
-    app = App()
+    app = application.App()
 
 if __name__ == '__main__':
     main()
