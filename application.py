@@ -1,6 +1,24 @@
-from parser import *
+from parser import ParseC, StructureType
+from graphics import Point, Circle, Rectangle, GraphWin
 import sys
-from graphics import *
+import random
+
+def preparePos():
+    x = random.choice(range(100, 700))
+    y = random.choice(range(100, 500))
+    return Point(x,y)
+
+class ScreenObject():
+    def __init__(self, struct):
+        self.struct = struct
+        self.shape = {
+            struct.getType() == StructureType.CLASS: Circle(preparePos(), 40)#TODO: insert here some more types to draw   
+            #objType == StructureType.METHOD: Rectangle(preparePos(obj_container),preparePos(obj_container))
+            #struct.getType() == StructureType.VARIABLE : Rectangle(smth, smth)
+        }[True]
+    
+    def draw(self, window):
+        return self.shape.draw(window)
 
 class App:
     def __init__(self):
@@ -9,14 +27,19 @@ class App:
         self.isOn = True
         if len(sys.argv) > 1:
             self.parser = ParseC(sys.argv[1])
+        self.objects = []
         self.loop()
     
-    # def draw(self, objects):
-    #     for obj in objects:
-    #         obj.shape.undraw()
-    #         obj.name.undraw()
-    #         obj.shape.draw(self._win)
-    #         obj.name.draw(self._win)
+    # def translateObjects(self):
+    #     for struct in self.parser.getObjects():
+
+    
+    def draw(self, objects):
+        for obj in objects:
+            obj.shape.undraw()
+            obj.name.undraw()
+            obj.shape.draw(self._win)
+            obj.name.draw(self._win)
 
     def loop(self):
         while self._win.isOpen:
