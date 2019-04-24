@@ -1,4 +1,4 @@
-from parser import ParseC, StructureType
+from divineparse.parser import ParseC, StructureType
 from graphics import Point, Circle, Rectangle, GraphWin
 import sys
 import random
