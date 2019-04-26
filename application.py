@@ -3,37 +3,47 @@ from graphics import Point, Circle, Rectangle, GraphWin
 import sys
 import random
 
+RECT_SIZE_X = 10
+RECT_SIZE_Y = 15
+
 def preparePos():
     x = random.choice(range(100, 700))
     y = random.choice(range(100, 500))
     return Point(x,y)
 
-class ScreenObject():
+class ScreenObject:
     def __init__(self, struct):
         self.struct = struct
-        self.shape = {
-            struct.getType() == StructureType.CLASS: Circle(preparePos(), 40)#TODO: insert here some more types to draw   
-            #objType == StructureType.METHOD: Rectangle(preparePos(obj_container),preparePos(obj_container))
-            #struct.getType() == StructureType.VARIABLE : Rectangle(smth, smth)
-        }[True]
-    
+        self.shape = None
+
     def draw(self, window):
         return self.shape.draw(window)
 
+class RoundObject(ScreenObject):
+    def __init__(self, struct):
+        ScreenObject.__init__(self, struct)
+        self.shape = Circle(preparePos(), 40)
+
+class RectangleObject(ScreenObject):
+    def __init__(self, struct):
+        ScreenObject.__init__(self, struct)
+        pos = preparePos()
+        self.shape = Rectangle(pos, Point(pos.getX() + RECT_SIZE_X, pos.getY() + RECT_SIZE_Y))
+
 class App:
     def __init__(self):
-        self._win = GraphWin("DIVINEPLAN", 800, 600)
-        self._win.setBackground("cyan")
-        self.isOn = True
         if len(sys.argv) > 1:
             self.parser = ParseC(sys.argv[1])
+        else:
+            raise ValueError("No arguments passed to script")
+        self._win = GraphWin("DIVINEPLAN", 800, 600)
+        self._win.setBackground("cyan")
         self.objects = []
         self.loop()
     
     # def translateObjects(self):
     #     for struct in self.parser.getObjects():
 
-    
     def draw(self, objects):
         for obj in objects:
             obj.shape.undraw()
